@@ -15,50 +15,35 @@
 #    You should have received a copy of the GNU General Public License
 #    along with stronghammer .  If not, see <http://www.gnu.org/licenses/>.
 
-while [ ${#} -gt 0 ]
-do
-    case ${1} in
-        --package)
-            PACKAGE=${2} &&
-                shift 2
-        ;;
-        --entrypoint)
-            ENTRYPOINT=${2} &&
-                shift 2
-        ;;
-        --organization)
-            ORGANIZATION=${2} &&
-                shift 2
-        ;;
-        --project)
-            PROJECT=${2} &&
-                shift 2
-        ;;
-        --version)
-            VERSION=${2} &&
-                shift 2
-        ;;
-        *)
-            echo Unknown Option ${@} &&
-                exit 64
-        ;;
-    esac
-done &&
-    ( [ ! -z "${PACKAGE}" ] || (echo Alpine Package not specified && exit 65)) &&
+( [ ! -z "${PACKAGE}" ] || (echo Alpine Package not specified && exit 65)) &&
     ( [ ! -z "${ENTRYPOINT}" ] || (echo Alpine Entry Point not specified && exit 66)) &&
     ( [ ! -z "${ORGANIZATION}" ] || (echo Docker Organization not specified && exit 67)) &&
-    ( [ ! -z "${PROJECT}" ] || (echo Docker Project not specified && exit 68)) &&
+    ( [ ! -z "${DOCKERHUB_ID}" ] || (echo DockerHub User ID not specified && exit 68)) &&
+    ( [ ! -z "${DOCKERHUB_PASSWORD}" ] || (echo DockerHub Password not specified && exit 69)) &&
+    ( [ ! -z "${VERSION}" ] || (echo Docker Version not specified && exit 69)) &&
     cd $(mktemp -d) &&
     (cat > Dockerfile <<EOF
 FROM wildwarehouse/alpine:0.0.1
+USER root
 RUN \
     apk update && \
     apk upgrade && \
-    apk add --no-cache ${ALPINE_PACKAGE} && \
+    apk add --no-cache ${PACKAGE} && \
     rm -rf /var/cache/apk/*
-ENTRYPOINT ["${ALPINE_ENTRYPOINT}"]
-CMD []
+USER user
+ENTRYPOINT [ "${ENTRYPOINT}" ]
+CMD [ ]
 EOF
     ) &&
-    docker build --tag ${DOCKER_ORGANIZATION}/${DOCKER_PROJECT}:${DOCKER_VERSION} .
-    
+    docker build --tag ${ORGANIZATION}/${ENTRYPOINT}:${VERSION} . &&
+    (cat <<EOF
+{
+    "username": "${DOCKERHUB_ID}",
+    "password": "${DOCKERHUB_PASSWORD}"
+}
+EOF
+    ) | curl -s -H "Content-Type: application/json" -X POST -d @- https://hub.docker.com/v2/users/login/ | jq -r .token > token.txt &&
+    TOKEN=$(cat token.txt) &&
+    curl -s -H "Authorization: JWT ${TOKEN}" https://hub.docker.com/v2/repositories/${ORGANIZATION}/${ENTRYPOINT} &&
+    docker login --username ${DOCKERHUB_ID} --password ${DOCKERHUB_PASSWORD} &&
+    docker push ${ORGANIZATION}/${ENTRYPOINT}:${VERSION}

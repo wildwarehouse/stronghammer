@@ -18,4 +18,6 @@
 apk update &&
     apk upgrade &&
     apk add --no-cache docker &&
+    apk add --no-cache curl &&
+    apk add --no-cache jq &&
     rm -rf /var/cache/apk/*

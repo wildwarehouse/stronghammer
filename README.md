@@ -20,18 +20,25 @@ stronghammer builds alpine based docker images.
 Usage:
 
 ```
-PACKAGE=findutils &&
-    ENTRYPOINT=find &&
-    ORGANIZATION=mydockerorg &&
-    PROJECT=find &&
-    VERSION=0.0.0
+export PACKAGE=findutils &&
+    export ENTRYPOINT=find &&
+    export ORGANIZATION=mydockerorg &&
+    export VERSION=0.0.0 &&
+    DOCKERHUB_ID=your docker hub id
+    DOCKERHUB_PASSWORD= your docker hub password
     docker \
         run \
         --interactive \
         --tty \
         --rm \
-        wildwarehouse/stronghammer:0.0.0 \
-        --package ${PACKAGE} --entrypoint ${ENTRYPOINT} --organization ${ORGANIZATION} --project ${PROJECT} --version ${VERSION}
+        --env PACKAGE \
+        --env ENTRYPOINT \
+        --env ORGANIZATION \
+        --env PROJECT \
+        --env VERSION \
+        wildwarehouse/stronghammer:1.0.0
 ```
 
 would create a docker image with findutils installed.  running this image would invoke find.
+
+this will push the image to dockerhub for everyone to enjoy.
