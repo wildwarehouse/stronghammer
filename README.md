@@ -14,3 +14,24 @@
 #    You should have received a copy of the GNU General Public License
 #    along with stronghammer .  If not, see <http://www.gnu.org/licenses/>.
 -->
+
+stronghammer builds alpine based docker images.
+
+Usage:
+
+```
+PACKAGE=findutils &&
+    ENTRYPOINT=find &&
+    ORGANIZATION=mydockerorg &&
+    PROJECT=find &&
+    VERSION=0.0.0
+    docker \
+        run \
+        --interactive \
+        --tty \
+        --rm \
+        wildwarehouse/stronghammer:0.0.0 \
+        --package ${PACKAGE} --entrypoint ${ENTRYPOINT} --organization ${ORGANIZATION} --project ${PROJECT} --version ${VERSION}
+```
+
+would create a docker image with findutils installed.  running this image would invoke find.
